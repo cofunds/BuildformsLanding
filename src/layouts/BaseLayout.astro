@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import faviconIco from '../assets/favicon.ico?url';
 
 type Props = {
 	title: string;
@@ -47,7 +48,8 @@ const jsonLd = {
 			rel="stylesheet"
 			href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap"
 		/>
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/svg+xml" href={faviconIco} />
+		<link rel="icon" href={faviconIco} sizes="any" />
 		<meta name="generator" content={Astro.generator} />
 		<link rel="canonical" href={canonical} />
 		<title>{title}</title>
