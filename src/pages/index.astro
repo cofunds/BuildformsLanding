@@ -1,11 +1,18 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+export const prerender = true;
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { LandingMarketingIsland } from '../components/islands/LandingMarketingIsland';
+import { BookDemoModalIsland } from '../components/islands/BookDemoModalIsland';
+import { PostHogRoot } from '../components/islands/PostHogRoot';
+
+const title = 'BuildForms - AI Hiring OS for Startups & Small Teams';
+const description =
+	'BuildForms is an AI-powered hiring OS that helps startups collect structured applications, evaluate candidates with AI, and hire faster. Set up your hiring pipeline in minutes.';
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<BaseLayout {title} {description}>
+	<PostHogRoot client:load />
+	<LandingMarketingIsland client:visible />
+	<BookDemoModalIsland client:idle />
+</BaseLayout>

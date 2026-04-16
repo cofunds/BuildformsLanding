@@ -1,0 +1,18 @@
+---
+export const prerender = true;
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PrivacyIsland from '../components/islands/PrivacyIsland';
+import { BookDemoModalIsland } from '../components/islands/BookDemoModalIsland';
+import { PostHogRoot } from '../components/islands/PostHogRoot';
+
+const title = 'Privacy Policy — BuildForms';
+const description =
+	'How BuildForms collects, uses, and protects your information — including data accessed via Google APIs.';
+---
+
+<BaseLayout {title} {description} path="/privacy">
+	<PostHogRoot client:load />
+	<PrivacyIsland client:load />
+	<BookDemoModalIsland client:idle />
+</BaseLayout>

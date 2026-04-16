@@ -1,0 +1,17 @@
+---
+export const prerender = true;
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TermsIsland from '../components/islands/TermsIsland';
+import { BookDemoModalIsland } from '../components/islands/BookDemoModalIsland';
+import { PostHogRoot } from '../components/islands/PostHogRoot';
+
+const title = 'Terms of Service — BuildForms';
+const description = 'Terms governing your use of the BuildForms platform during beta.';
+---
+
+<BaseLayout {title} {description} path="/terms">
+	<PostHogRoot client:load />
+	<TermsIsland client:load />
+	<BookDemoModalIsland client:idle />
+</BaseLayout>

@@ -1,0 +1,23 @@
+---
+export const prerender = true;
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const title = 'Page not found — BuildForms';
+---
+
+<BaseLayout {title} description="We could not find that page." noindex>
+	<main class="mx-auto flex min-h-[50vh] max-w-xl flex-col items-center justify-center px-4 py-24 text-center">
+		<p class="text-sm font-medium text-muted-foreground">404</p>
+		<h1 class="font-display mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+			Page not found
+		</h1>
+		<p class="mt-3 text-muted-foreground">The link may be broken or the page may have moved.</p>
+		<a
+			class="mt-8 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+			href="/"
+		>
+			Return to home
+		</a>
+	</main>
+</BaseLayout>
