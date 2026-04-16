@@ -1,0 +1,13 @@
+---
+/**
+ * Ensures /f/* hits the Vercel SSR pipeline so `src/middleware.ts` can merge OG tags and
+ * redirect to beta. Without a matching route, Vercel serves static 404 and middleware never runs.
+ */
+export const prerender = false;
+
+const target = new URL(
+	Astro.url.pathname + Astro.url.search + Astro.url.hash,
+	'https://beta.buildforms.so',
+);
+return Astro.redirect(target.toString(), 307);
+---
