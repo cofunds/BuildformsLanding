@@ -1,0 +1,17 @@
+---
+export const prerender = true;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlogIsland from '../../components/islands/BlogIsland';
+import { BookDemoModalIsland } from '../../components/islands/BookDemoModalIsland';
+import { PostHogRoot } from '../../components/islands/PostHogRoot';
+
+const title = 'Blog — BuildForms';
+const description = 'Product updates, hiring workflows, and notes from the BuildForms team.';
+---
+
+<BaseLayout {title} {description} path="/blog">
+	<PostHogRoot client:load />
+	<BlogIsland client:load />
+	<BookDemoModalIsland client:idle />
+</BaseLayout>

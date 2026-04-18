@@ -1,0 +1,24 @@
+---
+export const prerender = true;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlogPostIsland from '../../components/islands/BlogPostIsland';
+import { BookDemoModalIsland } from '../../components/islands/BookDemoModalIsland';
+import { PostHogRoot } from '../../components/islands/PostHogRoot';
+import { blogPosts, getPostBySlug } from '../../lib/blog';
+
+export function getStaticPaths() {
+	return blogPosts.map((post) => ({ params: { slug: post.slug } }));
+}
+
+const slug = Astro.params.slug!;
+const post = getPostBySlug(slug);
+const title = post ? `${post.title} — BuildForms` : 'Blog — BuildForms';
+const description = post?.excerpt ?? 'BuildForms blog post.';
+---
+
+<BaseLayout {title} {description} path={`/blog/${slug}`}>
+	<PostHogRoot client:load />
+	<BlogPostIsland client:load slug={slug} />
+	<BookDemoModalIsland client:idle />
+</BaseLayout>
