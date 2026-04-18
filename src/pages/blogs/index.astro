@@ -9,8 +9,9 @@ import { fetchPublishedHubContent } from '@/lib/contentHubDb';
 import {
 	estimateReadingTime,
 	hubItemHref,
-	hubTypeLabels,
+	PUBLISHED_CONTENT_TYPES,
 	type HubContentItem,
+	type PublishedContentType,
 } from '@/lib/contentHub';
 
 const SITE_URL = 'https://buildforms.so';
@@ -23,9 +24,22 @@ const im = import.meta.env as Record<string, string | undefined>;
 const hubResult = await fetchPublishedHubContent(im.DATABASE_URL);
 const published: HubContentItem[] = hubResult.ok ? hubResult.items : [];
 
-const blogs = published.filter((p) => p.type === 'blog');
-const guides = published.filter((p) => p.type === 'guide');
-const solutions = published.filter((p) => p.type === 'landing-page');
+const typeParam = Astro.url.searchParams.get('type');
+const filterType: PublishedContentType | undefined =
+	typeParam && (PUBLISHED_CONTENT_TYPES as readonly string[]).includes(typeParam)
+		? (typeParam as PublishedContentType)
+		: undefined;
+
+const items = filterType ? published.filter((p) => p.type === filterType) : published;
+const featured = items[0];
+const rest = items.slice(1);
+
+const filters: { label: string; value?: PublishedContentType }[] = [
+	{ label: 'All' },
+	{ label: 'Articles', value: 'blog' },
+	{ label: 'Guides', value: 'guide' },
+	{ label: 'Solutions', value: 'landing-page' },
+];
 
 const breadcrumbSchema = {
 	'@context': 'https://schema.org',
@@ -41,8 +55,11 @@ const breadcrumbSchema = {
 	],
 };
 
-const badgeClass =
-	'inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold text-foreground';
+function typeLabel(type: string): string {
+	if (type === 'guide') return 'guide';
+	if (type === 'landing-page') return 'solution';
+	return 'article';
+}
 
 function formatDate(iso: string | null, style: 'short' | 'long' = 'short') {
 	if (!iso) return '';
@@ -62,132 +79,129 @@ function formatDate(iso: string | null, style: 'short' | 'long' = 'short') {
 		<Navbar client:load />
 		<main class="pt-24 sm:pt-28 pb-16 sm:pb-20">
 			<div class="max-w-5xl mx-auto px-6 py-12">
-			<div class="space-y-12">
-				<div>
-					<h1 class="text-3xl font-bold text-foreground">Hiring Resources for Founders</h1>
-					<p class="text-muted-foreground mt-2 max-w-2xl text-sm sm:text-base leading-relaxed">
-						Practical guides on startup hiring, candidate evaluation, and building teams without the
-						enterprise bloat. Written by founders who have been through it.
-					</p>
-				</div>
-
-				{
-					published.length === 0 ? (
-						<p class="text-muted-foreground text-sm sm:text-base">
-							Content coming soon. Check back later.
+				<div class="space-y-8 sm:space-y-10">
+					<div>
+						<h1 class="text-3xl font-bold text-foreground">Hiring Resources for Founders</h1>
+						<p class="text-muted-foreground mt-2 max-w-2xl text-sm sm:text-base leading-relaxed">
+							Practical guides on startup hiring, candidate evaluation, and building teams without the
+							enterprise bloat. Written by founders who have been through it.
 						</p>
-					) : (
-						<div class="space-y-12">
-							<section>
-								<a
-									href={hubItemHref(published[0])}
-									class="block border border-border rounded-lg p-8 hover:border-foreground/20 transition-colors bg-muted/30"
+					</div>
+
+					{
+						published.length === 0 ? (
+							<p class="text-muted-foreground text-sm sm:text-base">
+								Content coming soon. Check back later.
+							</p>
+						) : (
+							<>
+								<div
+									class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 border-b border-border"
+									role="navigation"
+									aria-label="Content type"
 								>
-									<div class="flex flex-wrap items-center gap-2 mb-3">
-										<span class={badgeClass}>
-											{hubTypeLabels[published[0].type] ?? published[0].type}
-										</span>
-										<span class="text-xs text-muted-foreground">Latest</span>
-										{published[0].publishedAt && (
-											<span class="text-xs text-muted-foreground">
-												{formatDate(published[0].publishedAt, 'long')}
-											</span>
-										)}
-									</div>
-									<h2 class="text-2xl font-bold mb-2 text-foreground">{published[0].title}</h2>
-									{published[0].excerpt && (
-										<p class="text-muted-foreground text-sm sm:text-base">{published[0].excerpt}</p>
-									)}
-									<p class="text-xs text-muted-foreground mt-3">
-										{estimateReadingTime(published[0].body)} min read
-									</p>
-								</a>
-							</section>
+									{
+										filters.map((f) => {
+											const isActive = (f.value ?? 'all') === (filterType ?? 'all');
+											const href = f.value ? `/blogs?type=${f.value}` : '/blogs';
+											return (
+												<a
+													href={href}
+													class:list={[
+														'font-mono text-[11px] sm:text-xs uppercase tracking-[0.12em] px-3.5 sm:px-4 py-1.5 rounded-sm border transition-colors whitespace-nowrap shrink-0',
+														isActive
+															? 'bg-foreground border-foreground text-background'
+															: 'bg-background border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground',
+													]}
+												>
+													{f.label}
+												</a>
+											);
+										})
+									}
+								</div>
 
-							{guides.length > 0 && (
-								<section>
-									<h2 class="text-xl font-semibold mb-4 text-foreground">Guides</h2>
-									<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-										{guides.map((item) => (
-											<a
-												href={hubItemHref(item)}
-												class="block border border-border rounded-lg p-5 hover:border-foreground/20 transition-colors"
-											>
-												<div class="flex items-center gap-2 mb-2">
-													<span class={badgeClass}>Guide</span>
-													{item.publishedAt && (
-														<span class="text-xs text-muted-foreground">
-															{formatDate(item.publishedAt)}
-														</span>
-													)}
-												</div>
-												<h3 class="font-semibold mb-1 text-foreground">{item.title}</h3>
-												{item.excerpt && (
-													<p class="text-sm text-muted-foreground line-clamp-2">{item.excerpt}</p>
-												)}
-												<p class="text-xs text-muted-foreground mt-2">
-													{estimateReadingTime(item.body)} min read
-												</p>
-											</a>
-										))}
+								{items.length === 0 ? (
+									<div class="py-12 sm:py-16 text-center rounded-lg border border-border bg-muted/20 mt-6 sm:mt-8">
+										<p class="font-mono text-[11px] sm:text-xs uppercase tracking-[0.12em] text-muted-foreground mb-2">
+											no matches
+										</p>
+										<p class="text-muted-foreground text-sm sm:text-base max-w-md mx-auto px-4">
+											Nothing published in this category yet. Try another tab or view all resources.
+										</p>
 									</div>
-								</section>
-							)}
+								) : (
+									<div class="space-y-8 sm:space-y-10 mt-6 sm:mt-8">
+										{
+											featured && (
+												<a
+													href={hubItemHref(featured)}
+													class="block border border-border rounded-lg p-6 sm:p-8 hover:border-foreground/25 transition-colors bg-card"
+												>
+													<div class="flex flex-col gap-4 sm:gap-5">
+														<div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+															<span class="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.15em] px-2 py-1 rounded-sm bg-foreground text-background">
+																featured
+															</span>
+															<span class="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+																{typeLabel(featured.type)}
+															</span>
+														</div>
+														<h2 class="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
+															{featured.title}
+														</h2>
+														{featured.excerpt && (
+															<p class="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-3xl">
+																{featured.excerpt}
+															</p>
+														)}
+														<div class="flex items-center gap-2 sm:gap-2.5 font-mono text-[11px] sm:text-xs text-muted-foreground flex-wrap">
+															{featured.publishedAt && (
+																<span>{formatDate(featured.publishedAt, 'long')}</span>
+															)}
+															<span aria-hidden="true">&middot;</span>
+															<span>{estimateReadingTime(featured.body)} min read</span>
+														</div>
+													</div>
+												</a>
+											)
+										}
 
-							{blogs.length > 0 && (
-								<section>
-									<h2 class="text-xl font-semibold mb-4 text-foreground">Articles</h2>
-									<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-										{blogs.map((item) => (
-											<a
-												href={hubItemHref(item)}
-												class="block border border-border rounded-lg p-5 hover:border-foreground/20 transition-colors"
-											>
-												<div class="flex items-center gap-2 mb-2">
-													{item.publishedAt && (
-														<span class="text-xs text-muted-foreground">
-															{formatDate(item.publishedAt)}
-														</span>
-													)}
+										{
+											rest.length > 0 && (
+												<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+													{rest.map((item) => (
+														<a
+															href={hubItemHref(item)}
+															class="group block border border-border rounded-lg p-5 sm:p-6 hover:border-foreground/25 transition-colors bg-card h-full flex flex-col"
+														>
+															<p class="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-muted-foreground mb-2 sm:mb-3">
+																{typeLabel(item.type)}
+															</p>
+															<h3 class="text-base sm:text-lg font-semibold leading-snug text-foreground mb-2 sm:mb-3 group-hover:text-primary transition-colors line-clamp-3">
+																{item.title}
+															</h3>
+															{item.excerpt && (
+																<p class="text-sm text-muted-foreground leading-relaxed mb-4 sm:mb-5 line-clamp-3 flex-1">
+																	{item.excerpt}
+																</p>
+															)}
+															<div class="flex items-center gap-2 font-mono text-[11px] text-muted-foreground flex-wrap mt-auto">
+																{item.publishedAt && <span>{formatDate(item.publishedAt)}</span>}
+																<span aria-hidden="true">&middot;</span>
+																<span>{estimateReadingTime(item.body)} min</span>
+															</div>
+														</a>
+													))}
 												</div>
-												<h3 class="font-semibold mb-1 line-clamp-2 text-foreground">{item.title}</h3>
-												{item.excerpt && (
-													<p class="text-sm text-muted-foreground line-clamp-2">{item.excerpt}</p>
-												)}
-												<p class="text-xs text-muted-foreground mt-2">
-													{estimateReadingTime(item.body)} min read
-												</p>
-											</a>
-										))}
+											)
+										}
 									</div>
-								</section>
-							)}
-
-							{solutions.length > 0 && (
-								<section>
-									<h2 class="text-xl font-semibold mb-4 text-foreground">Solutions</h2>
-									<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-										{solutions.map((item) => (
-											<a
-												href={hubItemHref(item)}
-												class="block border border-border rounded-lg p-5 hover:border-foreground/20 transition-colors"
-											>
-												<div class="flex items-center gap-2 mb-2">
-													<span class={badgeClass}>Solution</span>
-												</div>
-												<h3 class="font-semibold mb-1 text-foreground">{item.title}</h3>
-												{item.excerpt && (
-													<p class="text-sm text-muted-foreground line-clamp-2">{item.excerpt}</p>
-												)}
-											</a>
-										))}
-									</div>
-								</section>
-							)}
-						</div>
-					)
-				}
-			</div>
+								)}
+							</>
+						)
+					}
+				</div>
 			</div>
 		</main>
 		<Footer />
