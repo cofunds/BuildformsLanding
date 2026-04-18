@@ -120,39 +120,33 @@ export async function fetchPublishedHubContent(
 		return { ok: false, items: [], code: 'invalid_db_url' };
 	}
 
-	const ns = hubDbCacheNamespace(connectionString);
-	return cachedHubRead(
-		`hub:v1:list:${ns}`,
-		async (): Promise<FetchHubResult> => {
-			try {
-				return await withSql(connectionString, async (sql) => {
-					const raw = await sql`
-						SELECT id, slug, title, body, excerpt, type, published_at
-						FROM content
-						WHERE status = 'published'
-						ORDER BY published_at DESC NULLS LAST, id DESC
-						LIMIT ${MAX_ROWS}
-					`;
+	/* Hub list is never memory-cached so /blogs always sees new publishes (see plan: Vercel hub cache). */
+	try {
+		return await withSql(connectionString, async (sql) => {
+			const raw = await sql`
+				SELECT id, slug, title, body, excerpt, type, published_at
+				FROM content
+				WHERE status = 'published'
+				ORDER BY published_at DESC NULLS LAST, id DESC
+				LIMIT ${MAX_ROWS}
+			`;
 
-					const items: HubContentItem[] = [];
-					for (const row of raw) {
-						const parsed = rowSchema.safeParse(row);
-						if (!parsed.success) {
-							console.warn('[content-hub] dropped row failing validation');
-							continue;
-						}
-						items.push(mapRow(parsed.data));
-					}
-
-					return { ok: true, items };
-				});
-			} catch (err) {
-				console.error('[content-hub] database query failed', err);
-				return { ok: false, items: [], code: 'query_failed' };
+			const items: HubContentItem[] = [];
+			for (const row of raw) {
+				const parsed = rowSchema.safeParse(row);
+				if (!parsed.success) {
+					console.warn('[content-hub] dropped row failing validation');
+					continue;
+				}
+				items.push(mapRow(parsed.data));
 			}
-		},
-		(r) => r.ok === true,
-	);
+
+			return { ok: true, items };
+		});
+	} catch (err) {
+		console.error('[content-hub] database query failed', err);
+		return { ok: false, items: [], code: 'query_failed' };
+	}
 }
 
 /** Published post by slug and canonical content type (blog / guide / landing-page). */

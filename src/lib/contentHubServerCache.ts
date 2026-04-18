@@ -1,6 +1,9 @@
 /**
- * In-memory TTL cache for published hub reads (SSR). Safe across requests on the same Node isolate.
- * Tune with CONTENT_HUB_CACHE_TTL_MS (0 = disable). Default 24h — content is effectively static once published.
+ * In-memory TTL cache for published hub article reads (SSR), per Node isolate.
+ *
+ * Env:
+ * - CONTENT_HUB_CACHE_TTL_MS — override TTL in ms (0 = disable in-memory cache). Applies everywhere when set.
+ * When unset: Vercel production (VERCEL=1) defaults to 10 minutes; local defaults to 0 (always hit DB).
  */
 
 type CacheEntry = { exp: number; data: unknown };
@@ -25,12 +28,22 @@ function readEnvTtlMs(): string | undefined {
 	);
 }
 
-export function contentHubCacheTtlMs(): number {
+/** Effective TTL for article/related hub reads. Hub list bypasses this layer entirely. */
+export function effectiveHubCacheTtlMs(): number {
 	const raw = readEnvTtlMs();
-	if (raw === undefined || raw === '') return 86_400_000; // 24h
-	const n = parseInt(raw, 10);
-	if (!Number.isFinite(n) || n < 0) return 86_400_000;
-	return n;
+	if (raw !== undefined && raw !== '') {
+		const n = parseInt(raw, 10);
+		if (Number.isFinite(n) && n >= 0) return n;
+	}
+	if (process.env.VERCEL === '1') {
+		return 600_000; // 10 minutes on Vercel
+	}
+	return 0; // local: no memory cache unless CONTENT_HUB_CACHE_TTL_MS is set
+}
+
+/** @deprecated Use effectiveHubCacheTtlMs; kept for any external imports. */
+export function contentHubCacheTtlMs(): number {
+	return effectiveHubCacheTtlMs();
 }
 
 /** Stable cache segment per DB host (avoids collisions if DATABASE_URL changes). */
@@ -50,7 +63,7 @@ export async function cachedHubRead<T>(
 	factory: () => Promise<T>,
 	shouldCache?: (value: T) => boolean,
 ): Promise<T> {
-	const ttl = contentHubCacheTtlMs();
+	const ttl = effectiveHubCacheTtlMs();
 	if (ttl === 0) {
 		return factory();
 	}
