@@ -1,6 +1,8 @@
 ---
 import '../styles/global.css';
 import faviconIco from '../assets/favicon.ico?url';
+import { ClientRouter } from 'astro:transitions';
+import ContentHubAnalytics from '@/components/content-hub/ContentHubAnalytics';
 
 type Props = {
 	title: string;
@@ -112,6 +114,17 @@ const jsonLd = {
 		</script>
 	</head>
 	<body class="min-h-dvh bg-background text-foreground">
+		<div class="hub-route-progress-bar" aria-hidden="true"></div>
+		<ClientRouter />
+		<ContentHubAnalytics client:load />
 		<slot />
+		<script is:inline>
+			document.addEventListener('astro:before-preparation', function () {
+				document.documentElement.classList.add('astro-route-loading');
+			});
+			document.addEventListener('astro:page-load', function () {
+				document.documentElement.classList.remove('astro-route-loading');
+			});
+		</script>
 	</body>
 </html>

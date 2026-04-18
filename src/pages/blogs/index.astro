@@ -1,0 +1,195 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Navbar from '../../components/Navbar';
+import Footer from '../../components/Footer';
+import { PostHogRoot } from '../../components/islands/PostHogRoot';
+import { fetchPublishedHubContent } from '@/lib/contentHubDb';
+import {
+	estimateReadingTime,
+	hubItemHref,
+	hubTypeLabels,
+	type HubContentItem,
+} from '@/lib/contentHub';
+
+const SITE_URL = 'https://buildforms.so';
+
+const title = 'Hiring Resources for Startup Founders | BuildForms';
+const description =
+	'Actionable guides and articles about startup hiring, candidate evaluation, and building teams without the enterprise bloat. Written by founders, for founders.';
+
+const im = import.meta.env as Record<string, string | undefined>;
+const hubResult = await fetchPublishedHubContent(im.DATABASE_URL);
+const published: HubContentItem[] = hubResult.ok ? hubResult.items : [];
+
+const blogs = published.filter((p) => p.type === 'blog');
+const guides = published.filter((p) => p.type === 'guide');
+const solutions = published.filter((p) => p.type === 'landing-page');
+
+const breadcrumbSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'BreadcrumbList',
+	itemListElement: [
+		{ '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+		{
+			'@type': 'ListItem',
+			position: 2,
+			name: 'Resources',
+			item: `${SITE_URL}/blogs`,
+		},
+	],
+};
+
+const badgeClass =
+	'inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold text-foreground';
+
+function formatDate(iso: string | null, style: 'short' | 'long' = 'short') {
+	if (!iso) return '';
+	const d = new Date(iso);
+	if (Number.isNaN(d.getTime())) return '';
+	if (style === 'long') {
+		return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+	}
+	return d.toLocaleDateString();
+}
+---
+
+<BaseLayout {title} {description} path="/blogs">
+	<script type="application/ld+json" is:inline set:html={JSON.stringify(breadcrumbSchema)} />
+	<PostHogRoot client:load />
+	<div class="min-h-screen bg-background">
+		<Navbar client:load />
+		<main class="pt-24 sm:pt-28 pb-16 sm:pb-20">
+			<div class="max-w-5xl mx-auto px-6 py-12">
+			<div class="space-y-12">
+				<div>
+					<h1 class="text-3xl font-bold text-foreground">Hiring Resources for Founders</h1>
+					<p class="text-muted-foreground mt-2 max-w-2xl text-sm sm:text-base leading-relaxed">
+						Practical guides on startup hiring, candidate evaluation, and building teams without the
+						enterprise bloat. Written by founders who have been through it.
+					</p>
+				</div>
+
+				{
+					published.length === 0 ? (
+						<p class="text-muted-foreground text-sm sm:text-base">
+							Content coming soon. Check back later.
+						</p>
+					) : (
+						<div class="space-y-12">
+							<section>
+								<a
+									href={hubItemHref(published[0])}
+									class="block border border-border rounded-lg p-8 hover:border-foreground/20 transition-colors bg-muted/30"
+								>
+									<div class="flex flex-wrap items-center gap-2 mb-3">
+										<span class={badgeClass}>
+											{hubTypeLabels[published[0].type] ?? published[0].type}
+										</span>
+										<span class="text-xs text-muted-foreground">Latest</span>
+										{published[0].publishedAt && (
+											<span class="text-xs text-muted-foreground">
+												{formatDate(published[0].publishedAt, 'long')}
+											</span>
+										)}
+									</div>
+									<h2 class="text-2xl font-bold mb-2 text-foreground">{published[0].title}</h2>
+									{published[0].excerpt && (
+										<p class="text-muted-foreground text-sm sm:text-base">{published[0].excerpt}</p>
+									)}
+									<p class="text-xs text-muted-foreground mt-3">
+										{estimateReadingTime(published[0].body)} min read
+									</p>
+								</a>
+							</section>
+
+							{guides.length > 0 && (
+								<section>
+									<h2 class="text-xl font-semibold mb-4 text-foreground">Guides</h2>
+									<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+										{guides.map((item) => (
+											<a
+												href={hubItemHref(item)}
+												class="block border border-border rounded-lg p-5 hover:border-foreground/20 transition-colors"
+											>
+												<div class="flex items-center gap-2 mb-2">
+													<span class={badgeClass}>Guide</span>
+													{item.publishedAt && (
+														<span class="text-xs text-muted-foreground">
+															{formatDate(item.publishedAt)}
+														</span>
+													)}
+												</div>
+												<h3 class="font-semibold mb-1 text-foreground">{item.title}</h3>
+												{item.excerpt && (
+													<p class="text-sm text-muted-foreground line-clamp-2">{item.excerpt}</p>
+												)}
+												<p class="text-xs text-muted-foreground mt-2">
+													{estimateReadingTime(item.body)} min read
+												</p>
+											</a>
+										))}
+									</div>
+								</section>
+							)}
+
+							{blogs.length > 0 && (
+								<section>
+									<h2 class="text-xl font-semibold mb-4 text-foreground">Articles</h2>
+									<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+										{blogs.map((item) => (
+											<a
+												href={hubItemHref(item)}
+												class="block border border-border rounded-lg p-5 hover:border-foreground/20 transition-colors"
+											>
+												<div class="flex items-center gap-2 mb-2">
+													{item.publishedAt && (
+														<span class="text-xs text-muted-foreground">
+															{formatDate(item.publishedAt)}
+														</span>
+													)}
+												</div>
+												<h3 class="font-semibold mb-1 line-clamp-2 text-foreground">{item.title}</h3>
+												{item.excerpt && (
+													<p class="text-sm text-muted-foreground line-clamp-2">{item.excerpt}</p>
+												)}
+												<p class="text-xs text-muted-foreground mt-2">
+													{estimateReadingTime(item.body)} min read
+												</p>
+											</a>
+										))}
+									</div>
+								</section>
+							)}
+
+							{solutions.length > 0 && (
+								<section>
+									<h2 class="text-xl font-semibold mb-4 text-foreground">Solutions</h2>
+									<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+										{solutions.map((item) => (
+											<a
+												href={hubItemHref(item)}
+												class="block border border-border rounded-lg p-5 hover:border-foreground/20 transition-colors"
+											>
+												<div class="flex items-center gap-2 mb-2">
+													<span class={badgeClass}>Solution</span>
+												</div>
+												<h3 class="font-semibold mb-1 text-foreground">{item.title}</h3>
+												{item.excerpt && (
+													<p class="text-sm text-muted-foreground line-clamp-2">{item.excerpt}</p>
+												)}
+											</a>
+										))}
+									</div>
+								</section>
+							)}
+						</div>
+					)
+				}
+			</div>
+			</div>
+		</main>
+		<Footer />
+	</div>
+</BaseLayout>

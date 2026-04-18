@@ -20,7 +20,7 @@ export const blogPosts: BlogPost[] = [
 			'Product updates, hiring workflows, and how we think about structured applications — starting here.',
 		paragraphs: [
 			'This is a placeholder post so routing and the blog island work end-to-end.',
-			'Paste your Next.js blog UI into `BlogIsland` / `BlogPostIsland`, or keep those as shells and move layout-only pieces into `.astro` files if you prefer less client JavaScript.',
+			'Placeholder post for local testing. Published posts from the database render at `/blog/[slug]` via SSR.',
 		],
 	},
 ];

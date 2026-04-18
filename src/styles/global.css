@@ -82,3 +82,31 @@
 .bg-gradient-radial {
 	background: radial-gradient(circle, var(--tw-gradient-stops));
 }
+
+/* Content hub: soft navigation loading indicator (View Transitions) */
+.hub-route-progress-bar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 2px;
+	z-index: 100;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.12s ease;
+	background: hsl(var(--primary));
+	transform-origin: 0 50%;
+}
+html.astro-route-loading .hub-route-progress-bar {
+	opacity: 1;
+	animation: hub-route-progress-pulse 0.9s ease-in-out infinite;
+}
+@keyframes hub-route-progress-pulse {
+	0%,
+	100% {
+		transform: scaleX(0.15);
+	}
+	50% {
+		transform: scaleX(0.85);
+	}
+}

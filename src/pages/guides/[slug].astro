@@ -15,7 +15,7 @@ if (!slug) {
 }
 
 const im = import.meta.env as Record<string, string | undefined>;
-const data = await resolveHubArticle(slug, 'blog', im.DATABASE_URL);
+const data = await resolveHubArticle(slug, 'guide', im.DATABASE_URL);
 if (!data) {
 	return new Response(null, { status: 404, statusText: 'Not Found' });
 }
@@ -23,7 +23,7 @@ if (!data) {
 const { post, related, headings, readingTime, middleCrumb, faqItems, breadcrumbLd, articleLd, faqLd, canonicalPath } =
 	data;
 const title = `${post.title} — BuildForms`;
-const description = post.excerpt ?? 'BuildForms blog post.';
+const description = post.excerpt ?? 'BuildForms guide.';
 ---
 
 <BaseLayout {title} {description} path={canonicalPath}>

@@ -57,6 +57,7 @@
     "motion": "^12.38.0",
     "next-themes": "^0.3.0",
     "ogl": "^1.0.11",
+    "postgres": "^3.4.9",
     "posthog-js": "^1.231.0",
     "react": "^19.2.5",
     "react-day-picker": "^8.10.1",
