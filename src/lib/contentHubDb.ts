@@ -1,10 +1,11 @@
 /**
  * Read published rows from Postgres using parameterized queries (no ORM / schema files).
- * Intended for Astro SSR only — one short-lived client per request, then closed.
+ * SSR uses a process-scoped pooled client (globalThis) so we do not open/close TCP+TLS per request.
  */
 import postgres from 'postgres';
 import { z } from 'zod';
 import type { HubContentItem, HubPostDetail, PublishedContentType } from '@/lib/contentHub';
+import { cachedHubRead, hubDbCacheNamespace } from '@/lib/contentHubServerCache';
 
 const rowSchema = z.object({
 	id: z.coerce.number().finite().int().positive(),
@@ -44,7 +45,6 @@ export type FetchHubResult =
 	| { ok: false; items: []; code: 'missing_db_url' | 'invalid_db_url' | 'query_failed' };
 
 const MAX_ROWS = 200;
-const RELATED_LIMIT = 6;
 
 function readImportMetaDatabaseUrl(): string | undefined {
 	try {
@@ -72,30 +72,40 @@ function resolveConnectionString(connectionSource?: string | null): string | und
 	);
 }
 
-async function withSql<T>(
-	connectionString: string,
-	run: (sql: ReturnType<typeof postgres>) => Promise<T>,
-): Promise<T> {
+type SqlClient = ReturnType<typeof postgres>;
+
+const globalForPg = globalThis as typeof globalThis & {
+	__buildformsReadSql?: SqlClient;
+	__buildformsReadSqlUrl?: string;
+};
+
+/** One pooled client per DATABASE_URL per Node process (warm connections across SSR requests). */
+function getSharedReadSql(connectionString: string): SqlClient {
 	const useSsl = !/localhost|127\.0\.0\.1/i.test(connectionString);
-	let sql: ReturnType<typeof postgres> | null = null;
-	try {
-		sql = postgres(connectionString, {
-			prepare: false,
-			ssl: useSsl ? 'require' : false,
-			connect_timeout: 12,
-			max: 1,
-			idle_timeout: 20,
-		});
-		return await run(sql);
-	} finally {
-		if (sql) {
-			try {
-				await sql.end({ timeout: 5 });
-			} catch {
-				/* ignore */
-			}
-		}
+	if (
+		globalForPg.__buildformsReadSql &&
+		globalForPg.__buildformsReadSqlUrl === connectionString
+	) {
+		return globalForPg.__buildformsReadSql;
 	}
+	if (globalForPg.__buildformsReadSql) {
+		void globalForPg.__buildformsReadSql.end({ timeout: 2 }).catch(() => {});
+		globalForPg.__buildformsReadSql = undefined;
+	}
+	globalForPg.__buildformsReadSqlUrl = connectionString;
+	globalForPg.__buildformsReadSql = postgres(connectionString, {
+		prepare: false,
+		ssl: useSsl ? 'require' : false,
+		connect_timeout: 12,
+		max: 8,
+		idle_timeout: 60,
+	});
+	return globalForPg.__buildformsReadSql;
+}
+
+async function withSql<T>(connectionString: string, run: (sql: SqlClient) => Promise<T>): Promise<T> {
+	const sql = getSharedReadSql(connectionString);
+	return await run(sql);
 }
 
 export async function fetchPublishedHubContent(
@@ -110,32 +120,39 @@ export async function fetchPublishedHubContent(
 		return { ok: false, items: [], code: 'invalid_db_url' };
 	}
 
-	try {
-		return await withSql(connectionString, async (sql) => {
-			const raw = await sql`
-				SELECT id, slug, title, body, excerpt, type, published_at
-				FROM content
-				WHERE status = 'published'
-				ORDER BY published_at DESC NULLS LAST, id DESC
-				LIMIT ${MAX_ROWS}
-			`;
+	const ns = hubDbCacheNamespace(connectionString);
+	return cachedHubRead(
+		`hub:v1:list:${ns}`,
+		async (): Promise<FetchHubResult> => {
+			try {
+				return await withSql(connectionString, async (sql) => {
+					const raw = await sql`
+						SELECT id, slug, title, body, excerpt, type, published_at
+						FROM content
+						WHERE status = 'published'
+						ORDER BY published_at DESC NULLS LAST, id DESC
+						LIMIT ${MAX_ROWS}
+					`;
 
-			const items: HubContentItem[] = [];
-			for (const row of raw) {
-				const parsed = rowSchema.safeParse(row);
-				if (!parsed.success) {
-					console.warn('[content-hub] dropped row failing validation');
-					continue;
-				}
-				items.push(mapRow(parsed.data));
+					const items: HubContentItem[] = [];
+					for (const row of raw) {
+						const parsed = rowSchema.safeParse(row);
+						if (!parsed.success) {
+							console.warn('[content-hub] dropped row failing validation');
+							continue;
+						}
+						items.push(mapRow(parsed.data));
+					}
+
+					return { ok: true, items };
+				});
+			} catch (err) {
+				console.error('[content-hub] database query failed', err);
+				return { ok: false, items: [], code: 'query_failed' };
 			}
-
-			return { ok: true, items };
-		});
-	} catch (err) {
-		console.error('[content-hub] database query failed', err);
-		return { ok: false, items: [], code: 'query_failed' };
-	}
+		},
+		(r) => r.ok === true,
+	);
 }
 
 /** Published post by slug and canonical content type (blog / guide / landing-page). */
@@ -152,24 +169,33 @@ export async function fetchPublishedPostBySlug(
 		return null;
 	}
 
+	const ns = hubDbCacheNamespace(connectionString);
+	const key = `hub:v1:post:${ns}:${contentType}:${encodeURIComponent(trimmed)}`;
+
 	try {
-		return await withSql(connectionString, async (sql) => {
-			const raw = await sql`
-				SELECT id, slug, title, body, excerpt, type, published_at, schema_markup
-				FROM content
-				WHERE status = 'published' AND slug = ${trimmed} AND type = ${contentType}
-				LIMIT 1
-			`;
-			const row = raw[0];
-			if (!row) return null;
-			const parsed = detailRowSchema.safeParse(row);
-			if (!parsed.success) {
-				console.warn('[content-hub] post row failed validation');
-				return null;
-			}
-			const item = mapDetailRow(parsed.data);
-			return item.type === contentType ? item : null;
-		});
+		return await cachedHubRead(
+			key,
+			async () => {
+				return await withSql(connectionString, async (sql) => {
+					const raw = await sql`
+						SELECT id, slug, title, body, excerpt, type, published_at, schema_markup
+						FROM content
+						WHERE status = 'published' AND slug = ${trimmed} AND type = ${contentType}
+						LIMIT 1
+					`;
+					const row = raw[0];
+					if (!row) return null;
+					const parsed = detailRowSchema.safeParse(row);
+					if (!parsed.success) {
+						console.warn('[content-hub] post row failed validation');
+						return null;
+					}
+					const item = mapDetailRow(parsed.data);
+					return item.type === contentType ? item : null;
+				});
+			},
+			(v) => v != null,
+		);
 	} catch (err) {
 		console.error('[content-hub] fetchPublishedPostBySlug failed', err);
 		return null;
@@ -188,28 +214,104 @@ export async function fetchRelatedPublishedContent(
 		return [];
 	}
 	const cap = Math.min(Math.max(limit, 1), 20);
+	const ns = hubDbCacheNamespace(connectionString);
+	const key = `hub:v1:related:${ns}:${encodeURIComponent(trimmed)}:${cap}`;
 
 	try {
-		return await withSql(connectionString, async (sql) => {
-			const raw = await sql`
-				SELECT id, slug, title, body, excerpt, type, published_at
-				FROM content
-				WHERE status = 'published' AND slug != ${trimmed}
-				ORDER BY published_at DESC NULLS LAST, id DESC
-				LIMIT ${cap}
-			`;
+		return await cachedHubRead(key, async () => {
+			return await withSql(connectionString, async (sql) => {
+				const raw = await sql`
+					SELECT id, slug, title, body, excerpt, type, published_at
+					FROM content
+					WHERE status = 'published' AND slug != ${trimmed}
+					ORDER BY published_at DESC NULLS LAST, id DESC
+					LIMIT ${cap}
+				`;
 
-			const items: HubContentItem[] = [];
-			for (const row of raw) {
-				const parsed = rowSchema.safeParse(row);
-				if (!parsed.success) continue;
-				items.push(mapRow(parsed.data));
-			}
-			return items;
+				const out: HubContentItem[] = [];
+				for (const row of raw) {
+					const parsed = rowSchema.safeParse(row);
+					if (!parsed.success) continue;
+					out.push(mapRow(parsed.data));
+				}
+				return out;
+			});
 		});
 	} catch (err) {
 		console.error('[content-hub] fetchRelatedPublishedContent failed', err);
 		return [];
+	}
+}
+
+/**
+ * One DB session: main post + related list (avoids a second cold connect for article SSR).
+ */
+export async function fetchPublishedPostWithRelated(
+	slug: string,
+	contentType: PublishedContentType,
+	relatedLimit: number,
+	connectionSource?: string | null,
+): Promise<{ post: HubPostDetail | null; related: HubContentItem[] }> {
+	const trimmed = slug.trim();
+	if (!trimmed || trimmed.length > 512) {
+		return { post: null, related: [] };
+	}
+	const connectionString = resolveConnectionString(connectionSource);
+	if (!connectionString || !isLikelyPostgresUrl(connectionString)) {
+		return { post: null, related: [] };
+	}
+	const cap = Math.min(Math.max(relatedLimit, 1), 20);
+	const ns = hubDbCacheNamespace(connectionString);
+	const key = `hub:v1:bundle:${ns}:${contentType}:${encodeURIComponent(trimmed)}:${cap}`;
+
+	try {
+		return await cachedHubRead(
+			key,
+			async () => {
+				return await withSql(connectionString, async (sql) => {
+					const rawPost = await sql`
+						SELECT id, slug, title, body, excerpt, type, published_at, schema_markup
+						FROM content
+						WHERE status = 'published' AND slug = ${trimmed} AND type = ${contentType}
+						LIMIT 1
+					`;
+					const row = rawPost[0];
+					if (!row) {
+						return { post: null, related: [] };
+					}
+					const parsedPost = detailRowSchema.safeParse(row);
+					if (!parsedPost.success) {
+						console.warn('[content-hub] post row failed validation');
+						return { post: null, related: [] };
+					}
+					const post = mapDetailRow(parsedPost.data);
+					if (post.type !== contentType) {
+						return { post: null, related: [] };
+					}
+
+					const rawRel = await sql`
+						SELECT id, slug, title, body, excerpt, type, published_at
+						FROM content
+						WHERE status = 'published' AND slug != ${trimmed}
+						ORDER BY published_at DESC NULLS LAST, id DESC
+						LIMIT ${cap}
+					`;
+
+					const related: HubContentItem[] = [];
+					for (const r of rawRel) {
+						const p = rowSchema.safeParse(r);
+						if (!p.success) continue;
+						related.push(mapRow(p.data));
+					}
+
+					return { post, related };
+				});
+			},
+			(r) => r.post != null,
+		);
+	} catch (err) {
+		console.error('[content-hub] fetchPublishedPostWithRelated failed', err);
+		return { post: null, related: [] };
 	}
 }
 

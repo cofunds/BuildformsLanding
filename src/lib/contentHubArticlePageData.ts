@@ -11,7 +11,7 @@ import {
 	type HubPostDetail,
 	type PublishedContentType,
 } from '@/lib/contentHub';
-import { fetchPublishedPostBySlug, fetchRelatedPublishedContent } from '@/lib/contentHubDb';
+import { fetchPublishedPostWithRelated, fetchRelatedPublishedContent } from '@/lib/contentHubDb';
 
 const SITE_URL = 'https://buildforms.so';
 
@@ -101,12 +101,14 @@ export async function resolveHubArticle(
 	contentType: PublishedContentType,
 	databaseUrl?: string,
 ): Promise<HubArticleResolved | null> {
-	const dbPost = await fetchPublishedPostBySlug(slug, contentType, databaseUrl);
+	const bundle = await fetchPublishedPostWithRelated(slug, contentType, 6, databaseUrl);
 	const staticFallback = contentType === 'blog' ? staticBlogFromSlug(slug) : null;
-	const post = dbPost ?? staticFallback;
+	const post = bundle.post ?? staticFallback;
 	if (!post) return null;
 
-	const related = await fetchRelatedPublishedContent(post.slug, 6, databaseUrl);
+	const related = bundle.post
+		? bundle.related
+		: await fetchRelatedPublishedContent(post.slug, 6, databaseUrl);
 	const headings = extractHeadings(post.body);
 	const readingTime = estimateReadingTime(post.body);
 	const faqItems = parseFaqFromSchemaMarkup(post.schemaMarkup);
