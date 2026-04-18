@@ -15,6 +15,7 @@ export const GET: APIRoute = async () => {
 		'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
 		`  <url><loc>${SITE}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`,
 		`  <url><loc>${SITE}/blogs</loc><changefreq>daily</changefreq><priority>0.9</priority></url>`,
+		`  <url><loc>${SITE}/changelog</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>`,
 	];
 
 	for (const r of rows) {
