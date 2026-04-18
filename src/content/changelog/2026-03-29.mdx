@@ -1,0 +1,45 @@
+---
+title: "Inbox Enhancements & Routing Fixes"
+description: "Completing the two-way inbox communication loop and stabilizing section-based form routing logic."
+date: "2026-03-29"
+tags: ["Inbox", "Bug Fixes"]
+version: "0.9"
+---
+
+{/*![Inbox Enhancements & Routing Fixes](https://example.com/images/2026-03-29.jpg)*/}
+
+- **Inbound Communication** -- respondents can now reply, completing the two-way inbox loop
+- **Inbox UI Overhaul** -- the communications interface has been significantly cleaned up
+- **Routing Stabilization** -- multiple edge cases in section-based routing have been resolved
+
+<div class="not-prose space-y-0 border border-border rounded-lg divide-y divide-border overflow-hidden">
+  <details class="group bg-background open:bg-muted/30">
+    <summary class="cursor-pointer list-none px-4 py-3 font-medium flex items-center justify-between gap-2 [&::-webkit-details-marker]:hidden">
+      Features
+      <span class="text-muted-foreground text-xs group-open:rotate-180 transition-transform">▼</span>
+    </summary>
+    <div class="px-4 pb-4 flex flex-col gap-4 text-balance">
+      <ul class="list-disc space-y-2 pl-4">
+        <li>
+          <strong>Full Inbox Functionality</strong> -- implemented inbound communication capabilities, allowing respondents to reply to your messages for full two-way conversation threads
+        </li>
+        <li>
+          <strong>UI Updates</strong> -- polished and updated the user interface for the communications inbox, addressing the rough state from the initial beta release
+        </li>
+      </ul>
+    </div>
+  </details>
+  <details class="group bg-background open:bg-muted/30">
+    <summary class="cursor-pointer list-none px-4 py-3 font-medium flex items-center justify-between gap-2 [&::-webkit-details-marker]:hidden">
+      Bug Fixes
+      <span class="text-muted-foreground text-xs group-open:rotate-180 transition-transform">▼</span>
+    </summary>
+    <div class="px-4 pb-4 flex flex-col gap-4 text-balance">
+      <ul class="list-disc space-y-2 pl-4">
+        <li>Fixed forms with circular section references causing infinite routing loops</li>
+        <li>Resolved sections being skipped incorrectly under certain branching conditions</li>
+        <li>Corrected submission data not accurately reflecting the actual path taken by the respondent</li>
+      </ul>
+    </div>
+  </details>
+</div>
