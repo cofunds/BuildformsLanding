@@ -8,6 +8,20 @@
  */
 
 const BETA_ORIGIN = 'https://beta.buildforms.so';
+const PROD_ORIGIN = 'https://buildforms.so';
+
+/** Prefer marketing-domain OG URLs when beta returns /api/og links. */
+function canonicalOgImageUrl(url: string): string {
+	try {
+		const u = new URL(url);
+		if (u.hostname === 'beta.buildforms.so' && u.pathname.startsWith('/api/og')) {
+			return `${PROD_ORIGIN}/api/og${u.search}`;
+		}
+	} catch {
+		/* keep raw */
+	}
+	return url;
+}
 
 const BETA_REDIRECT_SNIPPET = `<script data-buildforms="beta-redirect">window.location.replace(${JSON.stringify(BETA_ORIGIN)}+window.location.pathname+window.location.search+window.location.hash);</script>`;
 
@@ -149,13 +163,13 @@ function minimalMarketingShell(pageUrl: string): string {
 <meta property="og:description" content="BuildForms is an AI-powered hiring OS for startups and small teams." />
 <meta property="og:url" content="${esc(pageUrl)}" />
 <meta property="og:site_name" content="BuildForms" />
-<meta property="og:image" content="https://beta.buildforms.so/api/og" />
+<meta property="og:image" content="https://buildforms.so/api/og" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="BuildForms" />
 <meta name="twitter:description" content="BuildForms is an AI-powered hiring OS for startups and small teams." />
-<meta name="twitter:image" content="https://beta.buildforms.so/api/og" />
+<meta name="twitter:image" content="https://buildforms.so/api/og" />
 </head><body>
 ${BETA_REDIRECT_SNIPPET}
 <noscript><p><a href="${dest}">Continue to BuildForms</a></p></noscript>
@@ -247,7 +261,7 @@ export async function tryRespondWithMergedOgShell(request: Request): Promise<Res
 			} catch {
 				/* keep raw segment */
 			}
-			const ogImage = `${BETA_ORIGIN}/api/og?slug=${encodeURIComponent(slugDecoded)}`;
+			const ogImage = `${PROD_ORIGIN}/api/og?slug=${encodeURIComponent(slugDecoded)}`;
 			html = replaceMetaProperty(html, 'og:image', ogImage);
 			html = replaceMetaName(html, 'twitter:image', ogImage);
 		}
@@ -278,12 +292,16 @@ export async function tryRespondWithMergedOgShell(request: Request): Promise<Res
 		html = replaceMetaProperty(html, 'og:description', desc);
 		html = replaceMetaDescription(html, desc);
 	}
-	if (ogImage) html = replaceMetaProperty(html, 'og:image', decodeHtmlEntities(ogImage));
+	if (ogImage) {
+		html = replaceMetaProperty(html, 'og:image', canonicalOgImageUrl(decodeHtmlEntities(ogImage)));
+	}
 	if (twTitle) html = replaceMetaName(html, 'twitter:title', decodeHtmlEntities(twTitle));
 	if (twDescription) {
 		html = replaceMetaName(html, 'twitter:description', decodeHtmlEntities(twDescription));
 	}
-	if (twImage) html = replaceMetaName(html, 'twitter:image', decodeHtmlEntities(twImage));
+	if (twImage) {
+		html = replaceMetaName(html, 'twitter:image', canonicalOgImageUrl(decodeHtmlEntities(twImage)));
+	}
 	if (docTitle) html = replaceTitleTag(html, decodeHtmlEntities(docTitle));
 
 	html = injectHeadBetaRefresh(html, pageUrl);

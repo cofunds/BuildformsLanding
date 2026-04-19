@@ -20,8 +20,19 @@ if (!data) {
 	return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
-const { post, related, headings, readingTime, middleCrumb, faqItems, breadcrumbLd, articleLd, faqLd, canonicalPath } =
-	data;
+const {
+	post,
+	related,
+	headings,
+	readingTime,
+	middleCrumb,
+	faqItems,
+	breadcrumbLd,
+	articleLd,
+	faqLd,
+	howToLd,
+	canonicalPath,
+} = data;
 const title = `${post.title} — BuildForms`;
 const description = post.excerpt ?? 'BuildForms blog post.';
 ---
@@ -42,6 +53,7 @@ const description = post.excerpt ?? 'BuildForms blog post.';
 				breadcrumbLd={breadcrumbLd}
 				articleLd={articleLd}
 				faqLd={faqLd}
+				howToLd={howToLd}
 			/>
 			</div>
 		</main>

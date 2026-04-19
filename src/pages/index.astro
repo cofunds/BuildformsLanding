@@ -11,7 +11,7 @@ const description =
 	'BuildForms is an AI-powered hiring OS that helps startups collect structured applications, evaluate candidates with AI, and hire faster. Set up your hiring pipeline in minutes.';
 ---
 
-<BaseLayout {title} {description}>
+<BaseLayout {title} {description} includeProductSchema={true}>
 	<PostHogRoot client:load />
 	<LandingMarketingIsland client:visible />
 	<BookDemoModalIsland client:idle />

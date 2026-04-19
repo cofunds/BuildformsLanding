@@ -12,6 +12,7 @@ type Props = {
 	breadcrumbLd?: string;
 	articleLd?: string;
 	faqLd?: string;
+	howToLd?: string;
 };
 
 const {
@@ -24,6 +25,7 @@ const {
 	breadcrumbLd,
 	articleLd,
 	faqLd,
+	howToLd,
 } = Astro.props;
 
 const bodyClass =
@@ -36,6 +38,7 @@ const bodyClass =
 	)
 }
 {articleLd && <script type="application/ld+json" is:inline set:html={articleLd} />}
+{howToLd && <script type="application/ld+json" is:inline set:html={howToLd} />}
 {faqLd && <script type="application/ld+json" is:inline set:html={faqLd} />}
 
 <article class="max-w-4xl mx-auto px-6">

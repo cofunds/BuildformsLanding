@@ -25,6 +25,7 @@ export type HubArticleResolved = {
 	breadcrumbLd: string;
 	articleLd: string;
 	faqLd?: string;
+	howToLd?: string;
 	canonicalPath: string;
 };
 
@@ -48,10 +49,16 @@ function canonicalPathFor(post: HubPostDetail): string {
 	return `/blog/${post.slug}`;
 }
 
-function jsonLdArticle(post: HubPostDetail, canonicalPath: string): string {
+function creativeWorkType(post: HubPostDetail): 'BlogPosting' | 'Article' {
+	if (post.type === 'blog') return 'BlogPosting';
+	return 'Article';
+}
+
+function jsonLdCreativeWork(post: HubPostDetail, canonicalPath: string): string {
+	const t = creativeWorkType(post);
 	return JSON.stringify({
 		'@context': 'https://schema.org',
-		'@type': 'Article',
+		'@type': t,
 		headline: post.title,
 		description: post.excerpt ?? undefined,
 		datePublished: post.publishedAt ?? undefined,
@@ -59,6 +66,34 @@ function jsonLdArticle(post: HubPostDetail, canonicalPath: string): string {
 		author: { '@type': 'Organization', name: '1126Labs', url: SITE_URL },
 		publisher: { '@type': 'Organization', name: '1126Labs', url: SITE_URL },
 	});
+}
+
+function jsonLdHowTo(
+	post: HubPostDetail,
+	canonicalPath: string,
+	headings: HubHeadingNav[],
+	readingTimeMinutes: number,
+): string | undefined {
+	if (post.type !== 'guide') return undefined;
+	const h2s = headings.filter((h) => h.level === 2);
+	if (h2s.length < 2) return undefined;
+	const step = h2s.map((h, i) => ({
+		'@type': 'HowToStep',
+		position: i + 1,
+		name: h.text,
+		url: `${SITE_URL}${canonicalPath}#${h.id}`,
+	}));
+	const base: Record<string, unknown> = {
+		'@context': 'https://schema.org',
+		'@type': 'HowTo',
+		name: post.title,
+		description: post.excerpt ?? undefined,
+		step,
+	};
+	if (readingTimeMinutes > 0) {
+		base.totalTime = `PT${readingTimeMinutes}M`;
+	}
+	return JSON.stringify(base);
 }
 
 function jsonLdBreadcrumb(
@@ -115,6 +150,8 @@ export async function resolveHubArticle(
 	const middleCrumb = hubMiddleCrumbForType(post.type);
 	const canonicalPath = canonicalPathFor(post);
 
+	const howToLd = jsonLdHowTo(post, canonicalPath, headings, readingTime);
+
 	return {
 		post,
 		related,
@@ -123,8 +160,9 @@ export async function resolveHubArticle(
 		middleCrumb,
 		faqItems,
 		breadcrumbLd: jsonLdBreadcrumb(post, canonicalPath, middleCrumb),
-		articleLd: jsonLdArticle(post, canonicalPath),
+		articleLd: jsonLdCreativeWork(post, canonicalPath),
 		faqLd: faqLdFromMarkup(post.schemaMarkup),
+		howToLd,
 		canonicalPath,
 	};
 }

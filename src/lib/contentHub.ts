@@ -70,11 +70,11 @@ export function parseFaqFromSchemaMarkup(raw: string | null): HubFaqEntry[] {
 export function hubMiddleCrumbForType(type: string): { label: string; href: string } {
 	switch (type) {
 		case 'guide':
-			return { label: 'Guides', href: '/blogs' };
+			return { label: 'Guides', href: '/blogs?type=guide' };
 		case 'landing-page':
-			return { label: 'Solutions', href: '/blogs' };
+			return { label: 'Solutions', href: '/blogs?type=landing-page' };
 		default:
-			return { label: 'Blog', href: '/blogs' };
+			return { label: 'Blog', href: '/blogs?type=blog' };
 	}
 }
 

@@ -5,7 +5,7 @@ export const prerender = false;
 
 export const GET: APIRoute = async () => {
 	const im = import.meta.env as Record<string, string | undefined>;
-	const body = await buildLlmsBody('summary', im.DATABASE_URL);
+	const body = await buildLlmsBody('full', im.DATABASE_URL);
 
 	return new Response(body, {
 		status: 200,

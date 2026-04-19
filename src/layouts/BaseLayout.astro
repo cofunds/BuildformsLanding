@@ -10,19 +10,31 @@ type Props = {
 	ogImage?: string;
 	path?: string;
 	noindex?: boolean;
+	/** When true, emits SoftwareApplication JSON-LD (homepage / core marketing). Off by default for hub and legal pages. */
+	includeProductSchema?: boolean;
 };
 
 const site = 'https://buildforms.so';
 const {
 	title,
 	description,
-	ogImage = 'https://beta.buildforms.so/api/og',
+	ogImage = `${site}/api/og`,
 	path = Astro.url.pathname,
 	noindex = false,
+	includeProductSchema = false,
 } = Astro.props;
 
 const canonical = new URL(path, site).toString();
-const jsonLd = {
+
+const organizationLd = {
+	'@context': 'https://schema.org',
+	'@type': 'Organization',
+	name: 'BuildForms',
+	url: site,
+	logo: `${site}/logo.png`,
+};
+
+const productLd = {
 	'@context': 'https://schema.org',
 	'@type': 'SoftwareApplication',
 	name: 'BuildForms',
@@ -78,11 +90,14 @@ const jsonLd = {
 		<meta name="twitter:title" content={title} />
 		<meta name="twitter:description" content={description} />
 		<meta name="twitter:image" content={ogImage} />
-		<script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+		<script type="application/ld+json" is:inline set:html={JSON.stringify(organizationLd)} />
+		{includeProductSchema && (
+			<script type="application/ld+json" is:inline set:html={JSON.stringify(productLd)} />
+		)}
 		<script is:inline>
 			(function () {
 				var path = location.pathname;
-				var ogBase = 'https://beta.buildforms.so/api/og';
+				var ogBase = 'https://buildforms.so/api/og';
 				var formMatch = path.match(/^\/f\/([^/?#]+)/);
 				var workspaceMatch = path.match(/^\/w\//);
 				var ogImage = ogBase;
