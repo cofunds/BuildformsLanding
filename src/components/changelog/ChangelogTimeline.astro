@@ -1,0 +1,93 @@
+---
+import type { ChangelogEntry } from '@/lib/changelogData';
+import { formatChangelogDate } from '@/lib/changelogDate';
+
+type Props = {
+	entries: ChangelogEntry[];
+};
+
+const { entries } = Astro.props;
+---
+
+<div class="relative">
+	{
+		entries.map((entry) => (
+			<div class="relative" data-entry-id={entry.id}>
+				<div class="flex flex-col md:flex-row gap-y-6">
+					<div class="md:w-48 flex-shrink-0">
+						<div class="md:sticky md:top-8 pb-10">
+							<time class="text-sm font-medium text-muted-foreground block mb-3">
+								{formatChangelogDate(entry.date)}
+							</time>
+							{entry.version && (
+								<div class="inline-flex relative z-10 items-center justify-center w-10 h-10 text-foreground border border-border rounded-lg text-sm font-bold">
+									{entry.version}
+								</div>
+							)}
+						</div>
+					</div>
+					<div class="flex-1 md:pl-8 relative pb-10">
+						<div class="hidden md:block absolute top-2 left-0 w-px h-full bg-border">
+							<div class="hidden md:block absolute -translate-x-1/2 size-3 bg-primary rounded-full z-10" />
+						</div>
+						<div class="space-y-6">
+							<div class="relative z-10 flex flex-col gap-2">
+								<h2 class="text-2xl font-semibold tracking-tight text-balance">{entry.title}</h2>
+								{entry.tags.length > 0 && (
+									<div class="flex flex-wrap gap-2">
+										{entry.tags.map((tag) => (
+											<span class="h-6 w-fit px-2 text-xs font-medium bg-muted text-muted-foreground rounded-full border flex items-center justify-center">
+												{tag}
+											</span>
+										))}
+									</div>
+								)}
+							</div>
+							<div class="prose max-w-none prose-headings:scroll-mt-8 prose-headings:font-semibold prose-a:no-underline prose-headings:tracking-tight prose-headings:text-balance prose-p:tracking-tight prose-p:text-balance">
+								<ul class="not-prose list-none space-y-2 pl-0 my-6">
+									{entry.highlights.map((h) => (
+										<li class="text-foreground leading-relaxed">
+											<strong class="font-semibold">{h.label}</strong>
+											<span class="text-muted-foreground"> → </span>
+											<span>{h.detail}</span>
+										</li>
+									))}
+								</ul>
+
+								{entry.sections && entry.sections.length > 0 && (
+									<div class="not-prose space-y-0 border border-border rounded-lg divide-y divide-border overflow-hidden">
+										{entry.sections.map((section) => (
+											<details class="group bg-background open:bg-muted/30">
+												<summary class="cursor-pointer list-none px-4 py-3 font-medium flex items-center justify-between gap-2 [&::-webkit-details-marker]:hidden">
+													{section.title}
+													<span class="text-muted-foreground text-xs group-open:rotate-180 transition-transform">▼</span>
+												</summary>
+												<div class="px-4 pb-4 flex flex-col gap-4 text-balance">
+													<ul class="list-disc space-y-2 pl-4">
+														{section.bullets.map((b) => (
+															<li>
+																{b.kind === 'rich' ? (
+																	<span>
+																		<strong>{b.label}</strong>
+																		<span> → </span>
+																		{b.detail}
+																	</span>
+																) : (
+																	b.text
+																)}
+															</li>
+														))}
+													</ul>
+												</div>
+											</details>
+										))}
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		))
+	}
+</div>

@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",
-    "@astrojs/mdx": "^5.0.3",
     "@astrojs/react": "^5.0.3",
     "@astrojs/vercel": "^10.0.4",
     "@calcom/embed-react": "^1.5.3",
