@@ -14,11 +14,10 @@ import {
 } from "@/components/kibo-ui/video-player";
 
 /**
- * Prefer the optimized asset. Regenerate:
- * `ffmpeg -y -i public/videos/beta-1.mp4 -c:v libx264 -crf 26 -preset medium -movflags +faststart -c:a aac -b:a 96k public/videos/beta-1-optimized.mp4`
+ * Demo video is served from Supabase Storage (CDN). Override with `PUBLIC_HERO_DEMO_VIDEO_URL`.
  */
-const DEFAULT_VIDEO_SRC = "/videos/beta-1-optimized.mp4";
-const FALLBACK_VIDEO_SRC = "/videos/beta-1.mp4";
+const DEFAULT_VIDEO_SRC =
+  "https://ybvfkchbpilsxdvqqrmi.supabase.co/storage/v1/object/public/landing-resources/beta-1-optimized.mp4";
 
 export default function HeroDemoVideoSection() {
   const envSrc =
@@ -40,31 +39,6 @@ export default function HeroDemoVideoSection() {
       (entries) => {
         const e = entries[0];
         if (!e) return;
-        // #region agent log
-        fetch(
-          "http://127.0.0.1:7788/ingest/1e7a48bf-d408-4dd6-b666-fd542e5b4f8f",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Debug-Session-Id": "e3fb24",
-            },
-            body: JSON.stringify({
-              sessionId: "e3fb24",
-              location: "HeroDemoVideoSection.tsx:IntersectionObserver",
-              message: "io_callback",
-              data: {
-                isIntersecting: e.isIntersecting,
-                intersectionRatio: e.intersectionRatio,
-                boundingHeight: e.boundingClientRect?.height,
-                vh: typeof window !== "undefined" ? window.innerHeight : null,
-              },
-              timestamp: Date.now(),
-              hypothesisId: "H-IO",
-            }),
-          },
-        ).catch(() => {});
-        // #endregion
         // Prefetch when near or touching viewport (bottom margin expands "near" zone)
         if (e.isIntersecting || e.intersectionRatio > 0) {
           setMediaSrc((prev) => prev ?? canonicalSrc);
@@ -84,152 +58,12 @@ export default function HeroDemoVideoSection() {
     return () => observer.disconnect();
   }, [canonicalSrc]);
 
-  /** If optimized asset 404s (e.g. not deployed), fall back to full-size file once. */
-  useEffect(() => {
-    if (!mediaSrc || mediaSrc !== DEFAULT_VIDEO_SRC) return;
-
-    let cancelled = false;
-    let attempts = 0;
-    const attach = () => {
-      if (cancelled || attempts++ > 90) {
-        // #region agent log
-        if (!cancelled && attempts > 90)
-          fetch(
-            "http://127.0.0.1:7788/ingest/1e7a48bf-d408-4dd6-b666-fd542e5b4f8f",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Debug-Session-Id": "e3fb24",
-              },
-              body: JSON.stringify({
-                sessionId: "e3fb24",
-                location: "HeroDemoVideoSection.tsx:attach404",
-                message: "attach_gave_up",
-                data: { attempts },
-                timestamp: Date.now(),
-                hypothesisId: "H-ATTACH",
-              }),
-            },
-          ).catch(() => {});
-        // #endregion
-        return;
-      }
-      const video = playerWrapRef.current?.querySelector("video");
-      if (!video) {
-        requestAnimationFrame(attach);
-        return;
-      }
-      // #region agent log
-      fetch(
-        "http://127.0.0.1:7788/ingest/1e7a48bf-d408-4dd6-b666-fd542e5b4f8f",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Debug-Session-Id": "e3fb24",
-          },
-          body: JSON.stringify({
-            sessionId: "e3fb24",
-            location: "HeroDemoVideoSection.tsx:attach404",
-            message: "video_found_for_error_listener",
-            data: { attempts },
-            timestamp: Date.now(),
-            hypothesisId: "H-ATTACH",
-          }),
-        },
-      ).catch(() => {});
-      // #endregion
-      const onError = () => {
-        setMediaSrc(FALLBACK_VIDEO_SRC);
-      };
-      video.addEventListener("error", onError, { once: true });
-    };
-    requestAnimationFrame(attach);
-    return () => {
-      cancelled = true;
-    };
-  }, [mediaSrc]);
-
   useEffect(() => {
     if (!shouldAutoplay || !mediaSrc) return;
     const video = playerWrapRef.current?.querySelector("video");
-    // #region agent log
-    fetch(
-      "http://127.0.0.1:7788/ingest/1e7a48bf-d408-4dd6-b666-fd542e5b4f8f",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "e3fb24",
-        },
-        body: JSON.stringify({
-          sessionId: "e3fb24",
-          location: "HeroDemoVideoSection.tsx:playEffect",
-          message: "play_effect_run",
-          data: {
-            hasVideo: !!video,
-            shouldAutoplay,
-            mediaSrc,
-            readyState: video?.readyState,
-          },
-          timestamp: Date.now(),
-          hypothesisId: "H-DOM",
-        }),
-      },
-    ).catch(() => {});
-    // #endregion
     if (!video) return;
     video.muted = true;
-    void video.play().then(
-      () => {
-        // #region agent log
-        fetch(
-          "http://127.0.0.1:7788/ingest/1e7a48bf-d408-4dd6-b666-fd542e5b4f8f",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Debug-Session-Id": "e3fb24",
-            },
-            body: JSON.stringify({
-              sessionId: "e3fb24",
-              location: "HeroDemoVideoSection.tsx:playEffect",
-              message: "play_settled_ok",
-              data: {},
-              timestamp: Date.now(),
-              hypothesisId: "H-PLAY",
-            }),
-          },
-        ).catch(() => {});
-        // #endregion
-      },
-      (err: unknown) => {
-        // #region agent log
-        fetch(
-          "http://127.0.0.1:7788/ingest/1e7a48bf-d408-4dd6-b666-fd542e5b4f8f",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Debug-Session-Id": "e3fb24",
-            },
-            body: JSON.stringify({
-              sessionId: "e3fb24",
-              location: "HeroDemoVideoSection.tsx:playEffect",
-              message: "play_settled_reject",
-              data: {
-                name: err instanceof Error ? err.name : typeof err,
-                message: err instanceof Error ? err.message : String(err),
-              },
-              timestamp: Date.now(),
-              hypothesisId: "H-PLAY",
-            }),
-          },
-        ).catch(() => {});
-        // #endregion
-      },
-    );
+    void video.play().catch(() => {});
   }, [shouldAutoplay, mediaSrc]);
 
   return (
