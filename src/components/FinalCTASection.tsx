@@ -1,5 +1,5 @@
 import AnimatedSection from "./AnimatedSection";
-import Grainient from "./Grainient";
+import { MarketingGradientBackdrop } from "@/components/MarketingGradientBackdrop";
 import { ArrowRight } from "lucide-react";
 import { trackCTA } from "@/lib/analytics";
 import { BOOK_DEMO_EVENT } from "@/constants/book-demo";
@@ -14,34 +14,9 @@ const FinalCTASection = () => {
   return (
     <section
       id="book-a-demo"
-      className="relative section-spacing min-h-[50vh] overflow-hidden flex items-center justify-center"
+      className="relative section-spacing min-h-[50vh] overflow-hidden flex items-center justify-center bg-[#0f172a]"
     >
-      <div className="absolute inset-0 z-0">
-        <Grainient
-          color1="#162544"
-          color2="#1e3a5f"
-          color3="#2a4a6e"
-          timeSpeed={0.1}
-          colorBalance={0}
-          warpStrength={0.8}
-          warpFrequency={3}
-          warpSpeed={1}
-          warpAmplitude={50}
-          blendAngle={0}
-          blendSoftness={0.08}
-          rotationAmount={400}
-          noiseScale={2}
-          grainAmount={0.06}
-          grainScale={2}
-          grainAnimated={false}
-          contrast={1.2}
-          gamma={1}
-          saturation={1}
-          centerX={0}
-          centerY={0}
-          zoom={0.9}
-        />
-      </div>
+      <MarketingGradientBackdrop />
       <div className="relative z-10 max-w-7xl mx-auto text-center section-padding">
         <AnimatedSection>
           <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white max-w-2xl mx-auto">

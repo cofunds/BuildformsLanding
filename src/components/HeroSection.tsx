@@ -5,6 +5,7 @@ import { trackCTA } from "@/lib/analytics";
 import { BOOK_DEMO_EVENT } from "@/constants/book-demo";
 import { APP_AUTH_HREF } from "@/constants/app-urls";
 import { ExternalAppLink } from "@/components/ExternalAppLink";
+import { MarketingGradientBackdrop } from "@/components/MarketingGradientBackdrop";
 
 const AUDIENCE_PHRASES = [
   "FAST TEAMS",
@@ -32,13 +33,7 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-screen w-full bg-[#0f172a] flex flex-col items-center justify-center overflow-hidden pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16">
-      {/* Blue radial glow */}
-      <div
-        className="absolute inset-0 z-0 pointer-events-none"
-        style={{
-          backgroundImage: `radial-gradient(circle 600px at 50% 50%, rgba(59,130,246,0.3), transparent)`,
-        }}
-      />
+      <MarketingGradientBackdrop />
 
       <div className="relative z-10 max-w-7xl mx-auto w-full section-padding">
         <motion.div

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import AnimatedSection from "./AnimatedSection";
-import Grainient from "./Grainient";
+import { MarketingGradientBackdrop } from "@/components/MarketingGradientBackdrop";
 import { LayoutList, FileInput, Sparkles, MessageSquare } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
@@ -85,33 +85,11 @@ function FeatureVisual({ feature }: { feature: Feature }) {
 
 const ProductSection = () => {
   return (
-    <section id="features" className="relative section-spacing overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        <Grainient
-          color1="#162544"
-          color2="#1e3a5f"
-          color3="#2a4a6e"
-          timeSpeed={0.1}
-          colorBalance={0}
-          warpStrength={0.8}
-          warpFrequency={3}
-          warpSpeed={1}
-          warpAmplitude={50}
-          blendAngle={0}
-          blendSoftness={0.08}
-          rotationAmount={400}
-          noiseScale={2}
-          grainAmount={0.06}
-          grainScale={2}
-          grainAnimated={false}
-          contrast={1.2}
-          gamma={1}
-          saturation={1}
-          centerX={0}
-          centerY={0}
-          zoom={0.9}
-        />
-      </div>
+    <section
+      id="features"
+      className="relative section-spacing overflow-hidden bg-[#0f172a]"
+    >
+      <MarketingGradientBackdrop />
 
       <div className="relative z-10 max-w-5xl mx-auto section-padding">
         <AnimatedSection className="text-center">
@@ -131,8 +109,12 @@ const ProductSection = () => {
                   <div className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-white/10 text-white/80 mb-2.5 mx-auto lg:mx-0">
                     <feature.icon size={16} strokeWidth={1.5} />
                   </div>
-                  <h3 className="font-display text-base sm:text-lg font-bold text-white mb-1.5">{feature.title}</h3>
-                  <p className="text-sm text-white/50 leading-relaxed max-w-sm mx-auto lg:mx-0">{feature.desc}</p>
+                  <h3 className="font-display text-base sm:text-lg font-bold text-white mb-1.5">
+                    {feature.title}
+                  </h3>
+                  <p className="text-sm text-white/50 leading-relaxed max-w-sm mx-auto lg:mx-0">
+                    {feature.desc}
+                  </p>
                 </div>
                 <div className="lg:w-1/3 min-w-0 w-full max-w-xs mx-auto lg:max-w-none">
                   <motion.div
