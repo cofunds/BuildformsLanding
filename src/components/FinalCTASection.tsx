@@ -3,6 +3,8 @@ import Grainient from "./Grainient";
 import { ArrowRight } from "lucide-react";
 import { trackCTA } from "@/lib/analytics";
 import { BOOK_DEMO_EVENT } from "@/constants/book-demo";
+import { APP_AUTH_HREF } from "@/constants/app-urls";
+import { ExternalAppLink } from "@/components/ExternalAppLink";
 
 const FinalCTASection = () => {
   const openBookDemo = () => {
@@ -10,7 +12,10 @@ const FinalCTASection = () => {
   };
 
   return (
-    <section id="book-a-demo" className="relative section-spacing min-h-[50vh] overflow-hidden flex items-center justify-center">
+    <section
+      id="book-a-demo"
+      className="relative section-spacing min-h-[50vh] overflow-hidden flex items-center justify-center"
+    >
       <div className="absolute inset-0 z-0">
         <Grainient
           color1="#162544"
@@ -46,14 +51,14 @@ const FinalCTASection = () => {
             Set up your first pipeline in minutes. No credit card required.
           </p>
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-            <a
-              href="https://beta.buildforms.so/auth"
+            <ExternalAppLink
+              href={APP_AUTH_HREF}
               onClick={() => trackCTA("Get Started Free", "final-cta")}
               className="inline-flex items-center justify-center gap-2 rounded-md bg-white text-foreground font-medium h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base hover:bg-white/90 transition-colors"
             >
               Get Started Free
               <ArrowRight size={16} />
-            </a>
+            </ExternalAppLink>
             <button
               type="button"
               onClick={() => {
