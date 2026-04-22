@@ -45,7 +45,7 @@ const HeroSection = () => {
           <p className="text-xs sm:text-sm font-medium tracking-widest uppercase text-white/50 mb-4 sm:mb-6 flex flex-wrap items-baseline justify-center gap-x-1.5 gap-y-1">
             <span className="shrink-0">The hiring OS for</span>
             <span
-              className="inline-block min-w-[12.5rem] sm:min-w-[5rem] text-white/90 normal-case tracking-normal font-semibold"
+              className="inline-block min-w-[5rem] text-white/90 normal-case tracking-normal font-semibold"
               aria-live="polite"
               aria-atomic="true"
             >
