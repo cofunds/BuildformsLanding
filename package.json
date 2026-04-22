@@ -17,7 +17,7 @@
     "@astrojs/vercel": "^10.0.4",
     "@base-ui/react": "^1.4.1",
     "@calcom/embed-react": "^1.5.3",
-    "@fontsource-variable/geist": "^5.2.8",
+    "@fontsource-variable/instrument-sans": "^5.2.8",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",

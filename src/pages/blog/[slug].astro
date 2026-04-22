@@ -37,7 +37,7 @@ const title = `${post.title} — BuildForms`;
 const description = post.excerpt ?? 'BuildForms blog post.';
 ---
 
-<BaseLayout {title} {description} path={canonicalPath}>
+<BaseLayout {title} {description} path={canonicalPath} contentHubAnalytics={true}>
 	<PostHogRoot client:load />
 	<div class="min-h-screen bg-background">
 		<Navbar client:load />

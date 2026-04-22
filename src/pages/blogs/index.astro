@@ -72,7 +72,7 @@ function formatDate(iso: string | null, style: 'short' | 'long' = 'short') {
 }
 ---
 
-<BaseLayout {title} {description} path="/blogs">
+<BaseLayout {title} {description} path="/blogs" contentHubAnalytics={true}>
 	<script type="application/ld+json" is:inline set:html={JSON.stringify(breadcrumbSchema)} />
 	<PostHogRoot client:load />
 	<div class="min-h-screen bg-background">
