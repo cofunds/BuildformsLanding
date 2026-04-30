@@ -1,12 +1,29 @@
-import Cal from '@calcom/embed-react';
+import Cal, { getCalApi } from '@calcom/embed-react';
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 } from '@/components/ui/dialog';
 
+/** Namespace and link must match `getCalApi` / data-cal-* usage (see Cal embed docs). */
+export const CAL_EMBED_NAMESPACE = 'discovery';
+
 /** Public booking page — used to derive embed origin and path. */
-export const CAL_BOOKING_PAGE_URL = 'https://www.cal.eu/buildforms.so/demo';
+export const CAL_BOOKING_PAGE_URL = 'https://app.cal.com/buildforms/discovery';
+
+export const CAL_INLINE_CONFIG = {
+	layout: 'month_view' as const,
+	useSlotsViewOnSmallScreen: 'true' as const,
+};
+
+/** Prime Cal UI for this namespace (same as the `cal("ui", …)` snippet). */
+export async function initCalDiscoveryUi() {
+	const cal = await getCalApi({ namespace: CAL_EMBED_NAMESPACE });
+	cal('ui', {
+		hideEventTypeDetails: false,
+		layout: 'month_view',
+	});
+}
 
 export type CalEmbedParams = {
 	calLink: string;
@@ -33,8 +50,8 @@ export function getCalEmbedParamsFromPageUrl(pageUrl: string): CalEmbedParams | 
 
 export const defaultEmbedParams =
 	getCalEmbedParamsFromPageUrl(CAL_BOOKING_PAGE_URL) ?? {
-		calLink: 'buildforms.so/demo',
-		calOrigin: 'https://www.cal.eu',
+		calLink: 'buildforms/discovery',
+		calOrigin: 'https://app.cal.com',
 		embedJsUrl: 'https://www.cal.eu/embed/embed.js',
 	};
 
@@ -74,13 +91,12 @@ export function BookDemoCalDialog({ open, onOpenChange }: BookDemoCalDialogProps
 				<div className="max-h-[calc(90vh-160px)] w-full overflow-y-auto bg-white px-2 pb-4 sm:px-3">
 					{open ? (
 						<Cal
-							namespace="book-demo"
+							namespace={CAL_EMBED_NAMESPACE}
 							calLink={defaultEmbedParams.calLink}
 							calOrigin={defaultEmbedParams.calOrigin}
 							embedJsUrl={defaultEmbedParams.embedJsUrl}
 							config={{
-								layout: 'month_view',
-								useSlotsViewOnSmallScreen: 'true',
+								...CAL_INLINE_CONFIG,
 								theme: 'light',
 								'ui.color-scheme': 'light',
 							}}
