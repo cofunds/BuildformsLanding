@@ -1,0 +1,23 @@
+---
+export const prerender = true;
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { PostHogRoot } from '../components/islands/PostHogRoot';
+
+const DECK_URL =
+	'https://drive.google.com/file/d/1F4BzI-3x8SCr1XXRRbh8mBZKs59oJCmW/preview';
+
+const title = 'BuildForms deck';
+const description = 'BuildForms pitch deck.';
+---
+
+<BaseLayout {title} {description} path="/deck">
+	<PostHogRoot client:idle />
+	<iframe
+		src={DECK_URL}
+		class="h-dvh w-full border-0"
+		title="BuildForms pitch deck"
+		allow="fullscreen"
+		loading="eager"
+	/>
+</BaseLayout>
