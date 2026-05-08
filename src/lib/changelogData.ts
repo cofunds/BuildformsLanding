@@ -81,7 +81,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
 		highlights: [
 			{ label: 'Deep Reports via FRED', detail: 'generate full structured analysis reports and receive them by email' },
 			{ label: 'Landing Page Separated', detail: 'the marketing site is now a standalone codebase rebuilt in Astro' },
-			{ label: 'App Moved to beta.buildforms.so', detail: 'the core application now lives at its dedicated beta domain' },
+			{ label: 'App Moved to app.buildforms.so', detail: 'the core application now lives at its dedicated beta domain' },
 			{ label: 'Updated OG Images', detail: 'social preview images refreshed across the platform' },
 		],
 		sections: [
@@ -109,7 +109,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
 					{
 						kind: 'rich',
 						label: 'Domain Migration',
-						detail: 'moved the core application to beta.buildforms.so to clearly reflect its current beta stage',
+						detail: 'moved the core application to app.buildforms.so to clearly reflect its current beta stage',
 					},
 					{
 						kind: 'rich',

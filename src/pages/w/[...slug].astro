@@ -4,6 +4,6 @@
  */
 export const prerender = false;
 
-const target = new URL(Astro.url.pathname + Astro.url.search + Astro.url.hash, 'https://beta.buildforms.so');
+const target = new URL(Astro.url.pathname + Astro.url.search + Astro.url.hash, 'https://app.buildforms.so');
 return Astro.redirect(target.toString(), 307);
 ---

@@ -11,7 +11,7 @@
 
 /** Hostnames we may rewrite or attach intent/fallback handling to (no open redirects). */
 export const OUTBOUND_APP_LINK_HOSTS = new Set([
-  "beta.buildforms.so",
+  "app.buildforms.so",
   "buildforms.so",
   "www.buildforms.so",
 ]);

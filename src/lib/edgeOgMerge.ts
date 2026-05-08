@@ -7,14 +7,14 @@
  * to static 404 before this middleware runs.
  */
 
-const BETA_ORIGIN = 'https://beta.buildforms.so';
+const BETA_ORIGIN = 'https://app.buildforms.so';
 const PROD_ORIGIN = 'https://buildforms.so';
 
 /** Prefer marketing-domain OG URLs when beta returns /api/og links. */
 function canonicalOgImageUrl(url: string): string {
 	try {
 		const u = new URL(url);
-		if (u.hostname === 'beta.buildforms.so' && u.pathname.startsWith('/api/og')) {
+		if (u.hostname === 'app.buildforms.so' && u.pathname.startsWith('/api/og')) {
 			return `${PROD_ORIGIN}/api/og${u.search}`;
 		}
 	} catch {

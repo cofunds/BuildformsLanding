@@ -3,7 +3,7 @@ import type { APIRoute } from 'astro';
 /** Proxies OG images from the app deployment so meta tags can use buildforms.so URLs. */
 export const prerender = false;
 
-const BETA_OG_ORIGIN = 'https://beta.buildforms.so/api/og';
+const BETA_OG_ORIGIN = 'https://app.buildforms.so/api/og';
 
 export const GET: APIRoute = async ({ request }) => {
 	const src = new URL(request.url);
